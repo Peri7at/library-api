@@ -22,6 +22,13 @@ router.put(
   bookController.borrowBook
 );
 
+// PUT route for /api/books/borrow
+router.put(
+  "/return/:id",
+  userAuthenticationMiddleware,
+  bookController.returnBook
+);
+
 // GET, PUT and DELETE routes for /api/books/:id
 router
   .route("/:id")

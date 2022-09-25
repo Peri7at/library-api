@@ -111,9 +111,7 @@ module.exports = {
       }
 
       if (!book.isAvailable)
-        throw new Error(
-          "The book with the specified ID is not available for donation."
-        );
+        throw new Error("The book with the specified ID is not available.");
 
       book.count -= 1;
       book.borrowers.push(borrowerId);
@@ -125,6 +123,34 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
+  returnBook: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const borrowerId = req.user._id;
+
+      const book = await BookModel.findById(id);
+
+      if (!book) {
+        throw new Error("The book with the specified ID was not found.");
+      }
+
+      book.count += 1;
+
+      const index = book.borrowers.indexOf(borrowerId);
+      if (index > -1) {
+        book.borrowers.splice(index, 1);
+      }
+
+      if (book.count > 0) book.isAvailable = true;
+
+      await book.save();
+      res.json({ message: "Book returned successfully" });
+    } catch (err) {
+      res.status(422).json({ message: err.message ?? err });
+    }
+  },
+
   rateBook: async (req, res) => {
     const { bookid } = req.params;
     try {
