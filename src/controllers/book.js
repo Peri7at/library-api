@@ -19,9 +19,7 @@ module.exports = {
       const BookId = req.params.id;
       if (String(new ObjectId(BookId)) !== BookId.toString())
         throw new Error("Requested book ID is not valid!");
-      const book = await BookModel.findById(BookId).populate("owner", {
-        password_hash: 0,
-      });
+      const book = await BookModel.findById(BookId).populate("rating");
       if (!book) throw new Error("There is no book with the provided ID!");
       res.json(book);
     } catch (err) {
@@ -33,9 +31,7 @@ module.exports = {
     try {
       const availableBooks = await BookModel.find({
         isAvailable: true,
-      }).populate("owner", {
-        password_hash: 0,
-      });
+      }).populate("rating");
       if (availableBooks.length <= 0)
         throw new Error("There are no available books at the moment!");
       res.json(availableBooks);
@@ -49,11 +45,9 @@ module.exports = {
       const typeQuery = req.query.type;
       if (!typeQuery) throw new Error("Type query parameter is required!");
       const filteredBooks = await BookModel.find({
-        type: typeQuery,
+        type: typeQuery.toLowerCase(),
         isAvailable: true,
-      }).populate("owner", {
-        password_hash: 0,
-      });
+      }).populate("rating");
       if (filteredBooks.length <= 0)
         throw new Error(`There are no available books of type ${typeQuery}!`);
       res.json(filteredBooks);
@@ -65,15 +59,11 @@ module.exports = {
   updateBook: async (req, res) => {
     const { id } = req.params;
     try {
-      // the following line is to make sure that the owner of the book does not get updated
-      req.body.owner = req.user._id;
       const updatedBook = await BookModel.findByIdAndUpdate(
         id,
         { $set: req.body },
         { new: true }
-      ).populate("owner", {
-        password_hash: 0,
-      });
+      );
       if (!updatedBook) {
         throw new Error("The book with the specified ID was not found.");
       }
@@ -85,7 +75,6 @@ module.exports = {
 
   addBook: async (req, res) => {
     try {
-      req.body.owner = req.user._id;
       await BookModel.create(req.body);
       res.status(201).json({ message: "Book created successfully." });
     } catch (err) {
@@ -199,8 +188,7 @@ module.exports = {
       if (String(new ObjectId(bookid)) !== bookid.toString())
         throw new Error("Requested book ID is not valid!");
       const book = await BookModel.findById(bookid).populate(
-        "rating",
-        "raters"
+        "rating"
       );
       if (!book) throw new Error("The book with the specified ID wasn't found");
       if (!book.rating) {
@@ -242,8 +230,7 @@ module.exports = {
       if (String(new ObjectId(bookid)) !== bookid.toString())
         throw new Error("Requested book ID is not valid!");
       const book = await BookModel.findById(bookid).populate(
-        "rating",
-        "raters"
+        "rating"
       );
       if (!book) throw new Error("The book with the specified ID wasn't found");
       const rating = await RatingModel.findById(book.rating);
