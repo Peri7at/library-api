@@ -38,6 +38,11 @@ const userSchema = new Schema({
     type: [{ type: Schema.Types.ObjectId, ref: process.env.BOOK_MODEL_NAME }],
     default: [],
   },
+  role: {
+    type: String,
+    default: "Basic",
+    required: true,
+  },
   acceptTerms: {
     type: Boolean,
   },
