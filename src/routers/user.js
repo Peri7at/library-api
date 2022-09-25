@@ -8,10 +8,10 @@ const router = express.Router();
 
 const userController = require("../controllers/user");
 
-// GET route for /api/users
+// GET route for /api/admin/users
 router.get("/", userController.getAllUsers);
 
-// GET, PUT, DELETE routes for /api/users/:id
+// GET, PUT, DELETE routes for /api/admin/users/:id
 router
   .route("/:id")
   .get(userController.getSingleUser)

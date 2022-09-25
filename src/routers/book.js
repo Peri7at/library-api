@@ -12,8 +12,8 @@ router.get("/available", bookController.getAvailableBooks);
 // GET route for /api/books/filter
 router.get("/filter", bookController.getFilteredBooks);
 
-// POST route for /api/books
-router.post("/", userAuthenticationMiddleware, bookController.addBook);
+// POST route for /api/books/admin
+router.post("/admin", userAuthenticationMiddleware, bookController.addBook);
 
 // PUT route for /api/books/borrow
 router.put(
@@ -29,9 +29,9 @@ router.put(
   bookController.returnBook
 );
 
-// GET, PUT and DELETE routes for /api/books/:id
+// GET, PUT and DELETE routes for /api/books/admin/:id
 router
-  .route("/:id")
+  .route("/admin/:id")
   .get(bookController.getSingleBook)
   .put(
     userAuthenticationMiddleware,
