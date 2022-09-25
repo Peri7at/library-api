@@ -16,7 +16,11 @@ router.get("/filter", bookController.getFilteredBooks);
 router.post("/", userAuthenticationMiddleware, bookController.addBook);
 
 // PUT route for /api/books/borrow
-router.put("/borrow", userAuthenticationMiddleware, bookController.borrowBook);
+router.put(
+  "/borrow/:id",
+  userAuthenticationMiddleware,
+  bookController.borrowBook
+);
 
 // GET, PUT and DELETE routes for /api/books/:id
 router

@@ -101,12 +101,10 @@ module.exports = {
 
   borrowBook: async (req, res) => {
     try {
-      const { requestedBookId } = req.body;
+      const { id } = req.params;
       const borrowerId = req.user._id;
-      if (String(new ObjectId(requestedBookId)) !== requestedBookId.toString())
-        throw new Error("Requested book ID is not valid!");
 
-      const book = await BookModel.findById(requestedBookId);
+      const book = await BookModel.findById(id);
 
       if (!book) {
         throw new Error("The book with the specified ID was not found.");
