@@ -1,12 +1,11 @@
 const { ObjectId } = require("mongoose").Types;
 const BookModel = require("../models/book");
+const RatingModel = require("../models/rating");
 
 module.exports = {
   getAllBooks: async (req, res) => {
     try {
-      const books = await BookModel.find().populate("owner", {
-        password_hash: 0,
-      });
+      const books = await BookModel.find().populate("rating");
       if (books.length <= 0) throw new Error("No books found");
       res.json(books);
     } catch (err) {
@@ -124,6 +123,76 @@ module.exports = {
 
       await book.save();
       res.json({ message: "Book borrowed successfully" });
+    } catch (err) {
+      res.status(422).json({ message: err.message ?? err });
+    }
+  },
+  rateBook: async (req, res) => {
+    const { bookid } = req.params;
+    try {
+      if (String(new ObjectId(bookid)) !== bookid.toString())
+        throw new Error("Requested book ID is not valid!");
+      const book = await BookModel.findById(bookid).populate(
+        "rating",
+        "raters"
+      );
+      if (!book) throw new Error("The book with the specified ID wasn't found");
+      if (!book.rating) {
+        const newRatingData = {
+          book: bookid,
+          raters: [
+            {
+              raterId: req.user._id,
+              rating: req.body.rating,
+            },
+          ],
+        };
+        const newRating = await RatingModel.create(newRatingData);
+        book.rating = newRating.id;
+        await book.save();
+        res.status(201).json(newRating);
+      } else {
+        const newRater = {
+          raterId: req.user._id,
+          rating: req.body.rating,
+        };
+        const rating = await RatingModel.findById(book.rating);
+        const isRaterExisting = book.rating.raters.find(
+          (rater) => rater.raterId.toString() === req.user._id.toString()
+        );
+        if (isRaterExisting) throw new Error("You had already rated this book");
+        rating.raters.push(newRater);
+        await rating.save();
+        res.status(201).json(rating);
+      }
+    } catch (err) {
+      res.status(422).json({ message: err.message ?? err });
+    }
+  },
+  updateBookRating: async (req, res) => {
+    const { bookid } = req.params;
+    try {
+      if (String(new ObjectId(bookid)) !== bookid.toString())
+        throw new Error("Requested book ID is not valid!");
+      const book = await BookModel.findById(bookid).populate(
+        "rating",
+        "raters"
+      );
+      if (!book) throw new Error("The book with the specified ID wasn't found");
+      const rating = await RatingModel.findById(book.rating);
+      if (!rating) throw new Error("The book does not have any rating");
+      const bookRaters = book.rating.raters;
+      const indexOfRater = bookRaters.findIndex(
+        (rater) => rater.raterId.toString() === req.user._id.toString()
+      );
+      if (indexOfRater > -1) {
+        rating.raters[indexOfRater].rating = req.body.rating;
+      } else {
+        throw new Error("You do not have a rating to update");
+      }
+      await rating.save();
+      await book.save();
+      res.json(rating);
     } catch (err) {
       res.status(422).json({ message: err.message ?? err });
     }

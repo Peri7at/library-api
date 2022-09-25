@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
 
@@ -6,21 +6,21 @@ const raterSchema = new Schema({
   raterId: {
     type: Schema.Types.ObjectId,
     ref: process.env.USER_MODEL_NAME,
-    required: [true, 'Rater ID is required'],
+    required: [true, "Rater ID is required"],
   },
   rating: {
     type: Number,
     min: 0,
     max: 5,
-    required: [true, 'Rating value is required'],
+    required: [true, "Rating value is required"],
   },
 });
 
 const ratingSchema = new Schema({
-  user: {
+  book: {
     type: Schema.Types.ObjectId,
-    ref: process.env.USER_MODEL_NAME,
-    required: [true, 'User reference is required'],
+    ref: process.env.BOOK_MODEL_NAME,
+    required: [true, "Book reference is required"],
   },
   raters: {
     type: [raterSchema],
@@ -28,9 +28,9 @@ const ratingSchema = new Schema({
   },
 });
 
-ratingSchema.set('toJSON', { virtuals: true });
+ratingSchema.set("toJSON", { virtuals: true });
 
-ratingSchema.virtual('averageRating').get(function () {
+ratingSchema.virtual("averageRating").get(function () {
   let sum = 0;
   this.raters.forEach((rater) => {
     sum += rater.rating;

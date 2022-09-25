@@ -33,4 +33,10 @@ router
     bookController.deleteBook
   );
 
+// POST and PUT routes for /api/books/:id/rating
+router
+  .route("/:bookid/rating")
+  .post(userAuthenticationMiddleware, bookController.rateBook)
+  .put(userAuthenticationMiddleware, bookController.updateBookRating);
+
 module.exports = router;

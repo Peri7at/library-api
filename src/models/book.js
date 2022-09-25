@@ -69,6 +69,10 @@ const bookSchema = new Schema(
       type: [{ type: Schema.Types.ObjectId, ref: process.env.USER_MODEL_NAME }],
       default: [],
     },
+    rating: {
+      type: Schema.Types.ObjectId,
+      ref: process.env.RATING_MODEL_NAME,
+    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: process.env.USER_MODEL_NAME,

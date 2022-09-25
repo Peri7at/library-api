@@ -30,9 +30,13 @@ const userSchema = new Schema({
     type: String,
     required: [true, "Password is required"],
   },
-  rating: {
-    type: Schema.Types.ObjectId,
-    ref: process.env.RATING_MODEL_NAME,
+  previouslyBorrowedBooks: {
+    type: [{ type: Schema.Types.ObjectId, ref: process.env.BOOK_MODEL_NAME }],
+    default: [],
+  },
+  currentlyBorrowedBooks: {
+    type: [{ type: Schema.Types.ObjectId, ref: process.env.BOOK_MODEL_NAME }],
+    default: [],
   },
   acceptTerms: {
     type: Boolean,
