@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongoose").Types;
 const BookModel = require("../models/book");
 const RatingModel = require("../models/rating");
+const UserModel = require("../models/user");
 
 module.exports = {
   getAllBooks: async (req, res) => {
@@ -12,6 +13,7 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
   getSingleBook: async (req, res) => {
     try {
       const BookId = req.params.id;
@@ -26,6 +28,7 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
   getAvailableBooks: async (req, res) => {
     try {
       const availableBooks = await BookModel.find({
@@ -40,6 +43,7 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
   getFilteredBooks: async (req, res) => {
     try {
       const typeQuery = req.query.type;
@@ -57,6 +61,7 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
   updateBook: async (req, res) => {
     const { id } = req.params;
     try {
@@ -77,6 +82,7 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
   addBook: async (req, res) => {
     try {
       req.body.owner = req.user._id;
@@ -86,6 +92,7 @@ module.exports = {
       res.status(422).json({ message: err.message });
     }
   },
+
   deleteBook: async (req, res) => {
     const { id } = req.params;
     try {
@@ -105,6 +112,11 @@ module.exports = {
       const borrowerId = req.user._id;
 
       const book = await BookModel.findById(id);
+      const user = await UserModel.findById(borrowerId);
+
+      if (!user) {
+        throw new Error("The user with the specified ID was not found.");
+      }
 
       if (!book) {
         throw new Error("The book with the specified ID was not found.");
@@ -113,10 +125,18 @@ module.exports = {
       if (!book.isAvailable)
         throw new Error("The book with the specified ID is not available.");
 
+      if (user.currentlyBorrowedBooks.includes(book._id))
+        throw new Error(
+          "The book with the specified ID is already borrowed by you."
+        );
+
       book.count -= 1;
       book.borrowers.push(borrowerId);
       if (book.count === 0) book.isAvailable = false;
 
+      user.currentlyBorrowedBooks.push(book._id);
+
+      await user.save();
       await book.save();
       res.json({ message: "Book borrowed successfully" });
     } catch (err) {
@@ -130,20 +150,42 @@ module.exports = {
       const borrowerId = req.user._id;
 
       const book = await BookModel.findById(id);
+      const user = await UserModel.findById(borrowerId);
+
+      if (!user) {
+        throw new Error("The user with the specified ID was not found.");
+      }
 
       if (!book) {
         throw new Error("The book with the specified ID was not found.");
       }
 
+      if (!user.currentlyBorrowedBooks.includes(id)) {
+        throw new Error(
+          "The book with the specified ID was not borrowed by you."
+        );
+      }
+
       book.count += 1;
 
-      const index = book.borrowers.indexOf(borrowerId);
-      if (index > -1) {
-        book.borrowers.splice(index, 1);
+      const indexOfBorrower = book.borrowers.indexOf(borrowerId);
+      if (indexOfBorrower > -1) {
+        book.borrowers.splice(indexOfBorrower, 1);
+
+        const indexOfCurrentlyBorrowedBook =
+          user.currentlyBorrowedBooks.indexOf(id);
+
+        if (indexOfCurrentlyBorrowedBook > -1) {
+          user.currentlyBorrowedBooks.splice(indexOfCurrentlyBorrowedBook, 1);
+        }
       }
 
       if (book.count > 0) book.isAvailable = true;
 
+      if (!user.previouslyBorrowedBooks.includes(book._id))
+        user.previouslyBorrowedBooks.push(book._id);
+
+      await user.save();
       await book.save();
       res.json({ message: "Book returned successfully" });
     } catch (err) {
@@ -193,6 +235,7 @@ module.exports = {
       res.status(422).json({ message: err.message ?? err });
     }
   },
+
   updateBookRating: async (req, res) => {
     const { bookid } = req.params;
     try {
