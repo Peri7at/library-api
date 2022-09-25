@@ -24,6 +24,7 @@ module.exports = {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          role: user.role,
           _id: user._id,
         },
       };
@@ -90,6 +91,39 @@ module.exports = {
     try {
       res.clearCookie("token");
       res.json({ success: true });
+    } catch (err) {
+      res.status(422).json({ message: err.message ?? err });
+    }
+  },
+  updateUser: async (req, res, next) => {
+    const { _id } = req.user;
+    const { role } = req.body;
+    try {
+      if (!role || !_id) {
+        throw new Error("Please specify role");
+      }
+      if (role !== "admin") {
+        throw new Error("User role is not an admin");
+      }
+
+      const user = await User.findById(_id);
+      if (user.role === "admin") {
+        throw new Error("User is already an admin");
+      }
+      user.role = role;
+      user.save((err) => {
+        //Monogodb error checker
+        if (err) {
+          res
+            .status("400")
+            .json({ message: "An error occurred", error: err.message });
+          process.exit(1);
+        }
+        res.json({
+          message: "Update successful: You need to sign-in again",
+          user,
+        });
+      });
     } catch (err) {
       res.status(422).json({ message: err.message ?? err });
     }
