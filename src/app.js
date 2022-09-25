@@ -5,10 +5,10 @@ const path = require("path");
 const session = require("express-session");
 const cors = require("cors");
 const { connectToMongo } = require("./db/connection");
+const globalRoutes = require("./routers/global");
 const authRoutes = require("./routers/auth");
 const bookRoutes = require("./routers/book");
 const userRoutes = require("./routers/user");
-const globalRoutes = require("./routers/global");
 
 const app = express();
 
@@ -31,10 +31,10 @@ app.get("/status", (req, res) => {
   res.send("The server is up and running!");
 });
 
+app.use("/api/global", globalRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/admin/users", userRoutes);
-app.use("/api/global", globalRoutes);
 
 const server = app.listen(port, () => {
   console.log("info: ", `Server is running on port ${port}`);
