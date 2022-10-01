@@ -121,7 +121,7 @@ module.exports = {
 
       book.count -= 1;
       book.borrowers.push(borrowerId);
-      if (book.count === 0) book.isAvailable = false;
+      if (book.count < 1) book.isAvailable = false;
 
       user.currentlyBorrowedBooks.push(book._id);
 
@@ -187,9 +187,7 @@ module.exports = {
     try {
       if (String(new ObjectId(bookid)) !== bookid.toString())
         throw new Error("Requested book ID is not valid!");
-      const book = await BookModel.findById(bookid).populate(
-        "rating"
-      );
+      const book = await BookModel.findById(bookid).populate("rating");
       if (!book) throw new Error("The book with the specified ID wasn't found");
       if (!book.rating) {
         const newRatingData = {
@@ -229,9 +227,7 @@ module.exports = {
     try {
       if (String(new ObjectId(bookid)) !== bookid.toString())
         throw new Error("Requested book ID is not valid!");
-      const book = await BookModel.findById(bookid).populate(
-        "rating"
-      );
+      const book = await BookModel.findById(bookid).populate("rating");
       if (!book) throw new Error("The book with the specified ID wasn't found");
       const rating = await RatingModel.findById(book.rating);
       if (!rating) throw new Error("The book does not have any rating");
